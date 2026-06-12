@@ -1,0 +1,10 @@
+{
+  "id": "trackly",
+  "name": "Trackly",
+  "version": "0.1.0",
+  "minAppVersion": "1.0.0",
+  "description": "Track and log games, books, anime, manga, TV shows, movies, and web novels.",
+  "author": "Trackly",
+  "authorUrl": "",
+  "isDesktopOnly": false
+}
