@@ -17,6 +17,7 @@ export class AddEntryModal extends Modal {
   private rating: number = 0;
 
   private totalInput: HTMLInputElement | null = null;
+  private progressSettingEl: HTMLElement | null = null;
 
   constructor(app: App, callbacks: AddEntryModalCallbacks) {
     super(app);
@@ -56,6 +57,7 @@ export class AddEntryModal extends Modal {
 
     const progressSetting = new Setting(contentEl)
       .setName('Total Episodes/Chapters')
+      .setDesc('For anime, manga, web novels, and TV shows')
       .addText((text) => {
         text.inputEl.type = 'number';
         text.inputEl.min = '0';
@@ -66,11 +68,9 @@ export class AddEntryModal extends Modal {
         });
       });
     progressSetting.settingEl.addClass('trackly-progress-setting');
+    this.progressSettingEl = progressSetting.settingEl;
 
-    if (!HAS_PROGRESS[this.selectedType]) {
-      if (this.totalInput) this.totalInput.disabled = true;
-      progressSetting.settingEl.addClass('trackly-hidden');
-    }
+    this.toggleProgressField();
 
     new Setting(contentEl)
       .setName('Status')
@@ -89,7 +89,7 @@ export class AddEntryModal extends Modal {
       .addDropdown((dropdown) => {
         dropdown.addOption('0', 'Unrated');
         for (let i = 1; i <= 5; i++) {
-          dropdown.addOption(String(i), `${'★'.repeat(i)}${'☆'.repeat(5 - i)}`);
+          dropdown.addOption(String(i), `${'\u2605'.repeat(i)}${'\u2606'.repeat(5 - i)}`);
         }
         dropdown.setValue('0');
         dropdown.onChange((value) => {
@@ -105,7 +105,7 @@ export class AddEntryModal extends Modal {
     cancelBtn.addClass('trackly-btn-secondary');
     cancelBtn.addEventListener('click', () => this.close());
 
-    const addBtn = actions.createEl('button', { text: 'Add' });
+    const addBtn = actions.createEl('button', { text: 'Add Entry' });
     addBtn.addClass('trackly-btn');
     addBtn.addClass('trackly-btn-primary');
     addBtn.addEventListener('click', () => {
@@ -113,11 +113,15 @@ export class AddEntryModal extends Modal {
         new Notice('Please enter a name for the entry.');
         return;
       }
+      let progress = 0;
+      if (this.status === 'Completed' && HAS_PROGRESS[this.selectedType]) {
+        progress = this.total;
+      }
       this.callbacks.onAdd({
         name: this.name.trim(),
         type: this.selectedType,
         status: this.status,
-        progress: 0,
+        progress,
         total: this.total,
         rating: this.rating,
       });
@@ -126,16 +130,15 @@ export class AddEntryModal extends Modal {
   }
 
   private toggleProgressField(): void {
-    if (this.totalInput) {
-      const settingEl = this.totalInput.closest('.trackly-progress-setting');
+    if (this.progressSettingEl) {
       if (HAS_PROGRESS[this.selectedType]) {
-        this.totalInput.disabled = false;
-        settingEl?.removeClass('trackly-hidden');
+        if (this.totalInput) this.totalInput.disabled = false;
+        this.progressSettingEl.removeClass('trackly-hidden');
       } else {
-        this.totalInput.disabled = true;
-        this.totalInput.value = '0';
+        if (this.totalInput) this.totalInput.disabled = true;
+        if (this.totalInput) this.totalInput.value = '0';
         this.total = 0;
-        settingEl?.addClass('trackly-hidden');
+        this.progressSettingEl.addClass('trackly-hidden');
       }
     }
   }

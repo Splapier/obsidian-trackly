@@ -1,6 +1,6 @@
 import { Component } from 'obsidian';
 import type { MediaEntry, Status } from '../types';
-import { MEDIA_TYPES, MEDIA_TYPE_LABELS, HAS_PROGRESS } from '../types';
+import { MEDIA_TYPES, MEDIA_TYPE_LABELS, HAS_PROGRESS, MEDIA_TYPE_COLORS } from '../types';
 import type { StorageManager } from '../storage/manager';
 
 interface DashboardCallbacks {
@@ -59,12 +59,15 @@ export class DashboardView extends Component {
       const completed = entries.filter((e) => e.status === 'Completed').length;
       const total = entries.length;
       const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+      const typeColor = MEDIA_TYPE_COLORS[type];
 
       const card = summaryContainer.createEl('div');
       card.addClass('trackly-summary-card');
+      card.style.borderLeftColor = typeColor;
 
       const label = card.createEl('div', { text: MEDIA_TYPE_LABELS[type] });
       label.addClass('trackly-summary-label');
+      label.style.color = typeColor;
 
       const barContainer = card.createEl('div');
       barContainer.addClass('trackly-progress-bar-bg');
@@ -72,12 +75,21 @@ export class DashboardView extends Component {
       const barFill = barContainer.createEl('div');
       barFill.addClass('trackly-progress-bar-fill');
       barFill.style.width = `${percentage}%`;
+      barFill.style.background = `linear-gradient(90deg, ${this.darkenColor(typeColor, 0.4)}, ${typeColor})`;
 
       const counter = card.createEl('div', {
         text: `${completed} / ${total} completed (${percentage}%)`,
       });
       counter.addClass('trackly-summary-counter');
     }
+  }
+
+  private darkenColor(hex: string, amount: number): string {
+    const num = parseInt(hex.replace('#', ''), 16);
+    const r = Math.max(0, (num >> 16) - Math.round(255 * amount));
+    const g = Math.max(0, ((num >> 8) & 0x00ff) - Math.round(255 * amount));
+    const b = Math.max(0, (num & 0x0000ff) - Math.round(255 * amount));
+    return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
   }
 
   private renderActiveItems(): void {
@@ -96,14 +108,18 @@ export class DashboardView extends Component {
     list.addClass('trackly-active-list');
 
     for (const entry of activeEntries) {
+      const typeColor = MEDIA_TYPE_COLORS[entry.type];
+
       const item = list.createEl('div');
       item.addClass('trackly-active-item');
+      item.style.borderLeftColor = typeColor;
 
       const infoSection = item.createEl('div');
       infoSection.addClass('trackly-active-info');
 
       const typeBadge = infoSection.createEl('span', { text: MEDIA_TYPE_LABELS[entry.type] });
       typeBadge.addClass('trackly-type-badge');
+      typeBadge.style.background = typeColor;
 
       const nameEl = infoSection.createEl('span', { text: entry.name });
       nameEl.addClass('trackly-active-name');
@@ -112,6 +128,16 @@ export class DashboardView extends Component {
       controlsSection.addClass('trackly-active-controls');
 
       if (HAS_PROGRESS[entry.type]) {
+        const progressPercent = entry.total > 0 ? Math.round((entry.progress / entry.total) * 100) : 0;
+
+        const progressMiniBar = controlsSection.createEl('div');
+        progressMiniBar.addClass('trackly-mini-progress-bg');
+
+        const progressMiniFill = progressMiniBar.createEl('div');
+        progressMiniFill.addClass('trackly-mini-progress-fill');
+        progressMiniFill.style.width = `${progressPercent}%`;
+        progressMiniFill.style.background = typeColor;
+
         const progressDisplay = controlsSection.createEl('span', {
           text: `${entry.progress} / ${entry.total}`,
         });
@@ -120,6 +146,7 @@ export class DashboardView extends Component {
         const decrementBtn = controlsSection.createEl('button', { text: '-' });
         decrementBtn.addClass('trackly-btn');
         decrementBtn.addClass('trackly-btn-small');
+        decrementBtn.style.borderColor = typeColor;
         decrementBtn.addEventListener('click', () => {
           const updated = { ...entry, progress: Math.max(0, entry.progress - 1) };
           this.callbacks.onIncrement(updated, -1);
@@ -128,6 +155,7 @@ export class DashboardView extends Component {
         const incrementBtn = controlsSection.createEl('button', { text: '+' });
         incrementBtn.addClass('trackly-btn');
         incrementBtn.addClass('trackly-btn-small');
+        incrementBtn.style.borderColor = typeColor;
         incrementBtn.addEventListener('click', () => {
           const updated = { ...entry, progress: Math.min(entry.total, entry.progress + 1) };
           this.callbacks.onIncrement(updated, 1);
@@ -138,9 +166,12 @@ export class DashboardView extends Component {
       ratingContainer.addClass('trackly-rating-stars');
       for (let i = 1; i <= 5; i++) {
         const star = ratingContainer.createEl('span', {
-          text: i <= entry.rating ? '★' : '☆',
+          text: i <= entry.rating ? '\u2605' : '\u2606',
         });
         star.addClass('trackly-star');
+        if (i <= entry.rating) {
+          star.style.color = typeColor;
+        }
         star.addEventListener('click', () => {
           this.callbacks.onRatingChange(entry, i);
         });
@@ -155,7 +186,13 @@ export class DashboardView extends Component {
       }
       statusSelect.addEventListener('change', (ev) => {
         const target = ev.target as HTMLSelectElement;
-        this.callbacks.onStatusChange(entry, target.value as Status);
+        const newStatus = target.value as Status;
+        const updatedEntry: MediaEntry = {
+          ...entry,
+          status: newStatus,
+          progress: newStatus === 'Completed' && HAS_PROGRESS[entry.type] ? entry.total : entry.progress,
+        };
+        this.callbacks.onStatusChange(updatedEntry, newStatus);
       });
     }
   }
@@ -168,10 +205,13 @@ export class DashboardView extends Component {
     suggestionContainer.addClass('trackly-suggestion-card');
 
     if (this.suggestedEntry) {
+      const typeColor = MEDIA_TYPE_COLORS[this.suggestedEntry.type];
+
       const typeLabel = suggestionContainer.createEl('span', {
         text: MEDIA_TYPE_LABELS[this.suggestedEntry.type],
       });
       typeLabel.addClass('trackly-type-badge');
+      typeLabel.style.background = typeColor;
 
       const nameEl = suggestionContainer.createEl('span', {
         text: this.suggestedEntry.name,
@@ -184,7 +224,7 @@ export class DashboardView extends Component {
       emptyMsg.addClass('trackly-empty-state');
     }
 
-    const suggestBtn = suggestionContainer.createEl('button', { text: '🎲 Suggest Another' });
+    const suggestBtn = suggestionContainer.createEl('button', { text: 'Suggest Another' });
     suggestBtn.addClass('trackly-btn');
     suggestBtn.addClass('trackly-btn-primary');
     suggestBtn.addClass('trackly-suggest-btn');

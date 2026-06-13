@@ -1,6 +1,6 @@
 import { Component } from 'obsidian';
 import type { MediaEntry, MediaType, Status } from '../types';
-import { MEDIA_TYPES, STATUS_OPTIONS, MEDIA_TYPE_LABELS, HAS_PROGRESS } from '../types';
+import { MEDIA_TYPES, STATUS_OPTIONS, MEDIA_TYPE_LABELS, HAS_PROGRESS, MEDIA_TYPE_COLORS } from '../types';
 import type { StorageManager } from '../storage/manager';
 
 interface ManageCallbacks {
@@ -125,13 +125,17 @@ export class ManageView extends Component {
     list.addClass('trackly-entry-list');
 
     for (const entry of filtered) {
+      const typeColor = MEDIA_TYPE_COLORS[entry.type];
+
       const row = list.createEl('div');
       row.addClass('trackly-entry-row');
+      row.style.borderLeftColor = typeColor;
       row.dataset.entryId = entry.id;
 
       const typeBadge = row.createEl('span', { text: MEDIA_TYPE_LABELS[entry.type] });
       typeBadge.addClass('trackly-type-badge');
       typeBadge.addClass('trackly-entry-badge');
+      typeBadge.style.background = typeColor;
 
       const nameCell = row.createEl('span');
       nameCell.addClass('trackly-entry-name');
@@ -169,7 +173,7 @@ export class ManageView extends Component {
           }
         });
       } else {
-        progressCell.textContent = '—';
+        progressCell.textContent = '\u2014';
         progressCell.addClass('trackly-dash');
       }
 
@@ -181,23 +185,32 @@ export class ManageView extends Component {
       }
       statusCell.addEventListener('change', (ev) => {
         const target = ev.target as HTMLSelectElement;
-        this.callbacks.onUpdate({ ...entry, status: target.value as Status });
+        const newStatus = target.value as Status;
+        const updatedEntry: MediaEntry = {
+          ...entry,
+          status: newStatus,
+          progress: newStatus === 'Completed' && HAS_PROGRESS[entry.type] ? entry.total : entry.progress,
+        };
+        this.callbacks.onUpdate(updatedEntry);
       });
 
       const ratingContainer = row.createEl('span');
       ratingContainer.addClass('trackly-rating-stars');
       for (let i = 1; i <= 5; i++) {
         const star = ratingContainer.createEl('span', {
-          text: i <= entry.rating ? '★' : '☆',
+          text: i <= entry.rating ? '\u2605' : '\u2606',
         });
         star.addClass('trackly-star');
+        if (i <= entry.rating) {
+          star.style.color = typeColor;
+        }
         star.addEventListener('click', () => {
           const newRating = entry.rating === i ? 0 : i;
           this.callbacks.onUpdate({ ...entry, rating: newRating });
         });
       }
 
-      const deleteBtn = row.createEl('button', { text: '✕' });
+      const deleteBtn = row.createEl('button', { text: '\u2715' });
       deleteBtn.addClass('trackly-btn');
       deleteBtn.addClass('trackly-btn-danger');
       deleteBtn.addClass('trackly-btn-small');

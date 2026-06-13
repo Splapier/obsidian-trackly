@@ -46,6 +46,16 @@ export const HAS_PROGRESS: Record<MediaType, boolean> = {
   movies: false,
 };
 
+export const MEDIA_TYPE_COLORS: Record<MediaType, string> = {
+  games: '#4ade80',
+  books: '#f59e0b',
+  webNovels: '#f97316',
+  manga: '#a855f7',
+  anime: '#ec4899',
+  tvShows: '#3b82f6',
+  movies: '#14b8a6',
+};
+
 export function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 }
