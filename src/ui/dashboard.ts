@@ -1,5 +1,5 @@
 import { Component } from 'obsidian';
-import type { MediaEntry, Status } from '../types';
+import type { MediaEntry, MediaType, Status } from '../types';
 import { MEDIA_TYPES, MEDIA_TYPE_LABELS, HAS_PROGRESS, MEDIA_TYPE_COLORS } from '../types';
 import type { StorageManager } from '../storage/manager';
 
@@ -8,6 +8,8 @@ interface DashboardCallbacks {
   onStatusChange: (entry: MediaEntry, status: Status) => void;
   onRatingChange: (entry: MediaEntry, rating: number) => void;
   onSuggestClick: () => void;
+  onStartSuggestion: (entry: MediaEntry) => void;
+  onFilterClick: (type: MediaType) => void;
 }
 
 export class DashboardView extends Component {
@@ -64,6 +66,11 @@ export class DashboardView extends Component {
       const card = summaryContainer.createEl('div');
       card.addClass('trackly-summary-card');
       card.style.borderLeftColor = typeColor;
+      card.style.cursor = 'pointer';
+
+      card.addEventListener('click', () => {
+        this.callbacks.onFilterClick(type);
+      });
 
       const label = card.createEl('div', { text: MEDIA_TYPE_LABELS[type] });
       label.addClass('trackly-summary-label');
@@ -170,7 +177,7 @@ export class DashboardView extends Component {
         });
         star.addClass('trackly-star');
         if (i <= entry.rating) {
-          star.style.color = typeColor;
+          star.style.color = '#fbbf24';
         }
         star.addEventListener('click', () => {
           this.callbacks.onRatingChange(entry, i);
@@ -187,12 +194,19 @@ export class DashboardView extends Component {
       statusSelect.addEventListener('change', (ev) => {
         const target = ev.target as HTMLSelectElement;
         const newStatus = target.value as Status;
-        const updatedEntry: MediaEntry = {
+        let newProgress = entry.progress;
+        if (HAS_PROGRESS[entry.type]) {
+          if (newStatus === 'Completed') {
+            newProgress = entry.total;
+          } else if (newStatus === 'Not Started') {
+            newProgress = 0;
+          }
+        }
+        this.callbacks.onStatusChange({
           ...entry,
           status: newStatus,
-          progress: newStatus === 'Completed' && HAS_PROGRESS[entry.type] ? entry.total : entry.progress,
-        };
-        this.callbacks.onStatusChange(updatedEntry, newStatus);
+          progress: newProgress,
+        }, newStatus);
       });
     }
   }
@@ -205,18 +219,26 @@ export class DashboardView extends Component {
     suggestionContainer.addClass('trackly-suggestion-card');
 
     if (this.suggestedEntry) {
-      const typeColor = MEDIA_TYPE_COLORS[this.suggestedEntry.type];
+      const suggested = this.suggestedEntry;
+      const typeColor = MEDIA_TYPE_COLORS[suggested.type];
 
       const typeLabel = suggestionContainer.createEl('span', {
-        text: MEDIA_TYPE_LABELS[this.suggestedEntry.type],
+        text: MEDIA_TYPE_LABELS[suggested.type],
       });
       typeLabel.addClass('trackly-type-badge');
       typeLabel.style.background = typeColor;
 
       const nameEl = suggestionContainer.createEl('span', {
-        text: this.suggestedEntry.name,
+        text: suggested.name,
       });
       nameEl.addClass('trackly-suggestion-name');
+
+      const startBtn = suggestionContainer.createEl('button', { text: 'Start' });
+      startBtn.addClass('trackly-btn');
+      startBtn.addClass('trackly-btn-primary');
+      startBtn.addEventListener('click', () => {
+        this.callbacks.onStartSuggestion(suggested);
+      });
     } else {
       const emptyMsg = suggestionContainer.createEl('p', {
         text: 'All items have been started! Great job.',

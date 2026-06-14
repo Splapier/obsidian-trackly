@@ -6,6 +6,7 @@ import type { StorageManager } from '../storage/manager';
 interface ManageCallbacks {
   onDelete: (id: string, type: MediaType) => void;
   onUpdate: (entry: MediaEntry) => void;
+  onTypeChange: (entry: MediaEntry, newType: MediaType) => void;
   onAddClick: () => void;
 }
 
@@ -18,6 +19,9 @@ export class ManageView extends Component {
   private searchTerm: string = '';
   private filterType: MediaType | 'all' = 'all';
 
+  private searchInput: HTMLInputElement | null = null;
+  private filterSelect: HTMLSelectElement | null = null;
+
   constructor(container: HTMLElement, storage: StorageManager, callbacks: ManageCallbacks) {
     super();
     this.container = container;
@@ -27,7 +31,16 @@ export class ManageView extends Component {
 
   async load(): Promise<void> {
     this.allEntries = await this.storage.getAllEntries();
-    this.render();
+    this.renderToolbar();
+    this.renderEntryList();
+  }
+
+  public setFilterType(type: MediaType | 'all'): void {
+    this.filterType = type;
+    if (this.filterSelect) {
+      this.filterSelect.value = type;
+    }
+    this.renderEntryList();
   }
 
   private getFilteredEntries(): MediaEntry[] {
@@ -47,12 +60,15 @@ export class ManageView extends Component {
 
   private render(): void {
     this.container.empty();
-
     this.renderToolbar();
     this.renderEntryList();
   }
 
   private renderToolbar(): void {
+    if (this.searchInput) {
+      return;
+    }
+
     const toolbar = this.container.createEl('div');
     toolbar.addClass('trackly-toolbar');
 
@@ -65,6 +81,8 @@ export class ManageView extends Component {
     });
     searchInput.addClass('trackly-search-input');
     searchInput.value = this.searchTerm;
+    this.searchInput = searchInput;
+
     const debouncedSearch = (fn: () => void) => {
       let timeout: number | null = null;
       return () => {
@@ -78,11 +96,12 @@ export class ManageView extends Component {
 
     searchInput.addEventListener('input', debouncedSearch(() => {
       this.searchTerm = searchInput.value;
-      this.render();
+      this.renderEntryList();
     }));
 
     const filterSelect = toolbar.createEl('select');
     filterSelect.addClass('trackly-filter-select');
+    this.filterSelect = filterSelect;
 
     const allOpt = filterSelect.createEl('option', { text: 'All Types', value: 'all' });
     allOpt.selected = this.filterType === 'all';
@@ -97,7 +116,7 @@ export class ManageView extends Component {
     filterSelect.addEventListener('change', (ev) => {
       const target = ev.target as HTMLSelectElement;
       this.filterType = target.value as MediaType | 'all';
-      this.render();
+      this.renderEntryList();
     });
 
     const addBtn = toolbar.createEl('button', { text: '+ Add Entry' });
@@ -109,6 +128,9 @@ export class ManageView extends Component {
   }
 
   private renderEntryList(): void {
+    const existing = this.container.querySelectorAll('.trackly-entry-list');
+    existing.forEach((el) => el.remove());
+
     const filtered = this.getFilteredEntries();
 
     if (filtered.length === 0) {
@@ -132,10 +154,21 @@ export class ManageView extends Component {
       row.style.borderLeftColor = typeColor;
       row.dataset.entryId = entry.id;
 
-      const typeBadge = row.createEl('span', { text: MEDIA_TYPE_LABELS[entry.type] });
-      typeBadge.addClass('trackly-type-badge');
-      typeBadge.addClass('trackly-entry-badge');
-      typeBadge.style.background = typeColor;
+      const typeSelect = row.createEl('select');
+      typeSelect.addClass('trackly-entry-type');
+      typeSelect.style.borderColor = typeColor;
+      for (const type of MEDIA_TYPES) {
+        const opt = typeSelect.createEl('option', {
+          text: MEDIA_TYPE_LABELS[type],
+          value: type,
+        });
+        if (type === entry.type) opt.selected = true;
+      }
+      typeSelect.addEventListener('change', (ev) => {
+        const target = ev.target as HTMLSelectElement;
+        const newType = target.value as MediaType;
+        this.callbacks.onTypeChange(entry, newType);
+      });
 
       const nameCell = row.createEl('span');
       nameCell.addClass('trackly-entry-name');
@@ -186,12 +219,19 @@ export class ManageView extends Component {
       statusCell.addEventListener('change', (ev) => {
         const target = ev.target as HTMLSelectElement;
         const newStatus = target.value as Status;
-        const updatedEntry: MediaEntry = {
+        let newProgress = entry.progress;
+        if (HAS_PROGRESS[entry.type]) {
+          if (newStatus === 'Completed') {
+            newProgress = entry.total;
+          } else if (newStatus === 'Not Started') {
+            newProgress = 0;
+          }
+        }
+        this.callbacks.onUpdate({
           ...entry,
           status: newStatus,
-          progress: newStatus === 'Completed' && HAS_PROGRESS[entry.type] ? entry.total : entry.progress,
-        };
-        this.callbacks.onUpdate(updatedEntry);
+          progress: newProgress,
+        });
       });
 
       const ratingContainer = row.createEl('span');
@@ -202,7 +242,7 @@ export class ManageView extends Component {
         });
         star.addClass('trackly-star');
         if (i <= entry.rating) {
-          star.style.color = typeColor;
+          star.style.color = '#fbbf24';
         }
         star.addEventListener('click', () => {
           const newRating = entry.rating === i ? 0 : i;

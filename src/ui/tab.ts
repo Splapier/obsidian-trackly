@@ -59,7 +59,7 @@ export class TracklyTab extends ItemView {
     this.switchView('dashboard');
   }
 
-  private async switchView(view: 'dashboard' | 'manage'): Promise<void> {
+  private async switchView(view: 'dashboard' | 'manage', filterType?: MediaType): Promise<void> {
     this.navContainer.querySelectorAll('.trackly-nav-btn').forEach((btn, index) => {
       const isActive = (index === 0 && view === 'dashboard') || (index === 1 && view === 'manage');
       btn.classList.toggle('trackly-nav-btn-active', isActive);
@@ -87,6 +87,16 @@ export class TracklyTab extends ItemView {
           onSuggestClick: async () => {
             await this.dashboardView?.load();
           },
+          onStartSuggestion: async (entry: MediaEntry) => {
+            await this.storage.updateEntry({
+              ...entry,
+              status: 'Started',
+            });
+            await this.dashboardView?.load();
+          },
+          onFilterClick: (type: MediaType) => {
+            this.switchView('manage', type);
+          },
         }
       );
       await this.dashboardView.load();
@@ -103,6 +113,18 @@ export class TracklyTab extends ItemView {
             await this.storage.updateEntry(entry);
             await this.manageView?.load();
           },
+          onTypeChange: async (entry: MediaEntry, newType: MediaType) => {
+            await this.storage.deleteEntry(entry.id, entry.type);
+            await this.storage.addEntry({
+              name: entry.name,
+              type: newType,
+              status: entry.status,
+              progress: entry.progress,
+              total: entry.total,
+              rating: entry.rating,
+            });
+            await this.manageView?.load();
+          },
           onAddClick: () => {
             const modal = new AddEntryModal(this.app, {
               onAdd: async (entryData) => {
@@ -115,6 +137,9 @@ export class TracklyTab extends ItemView {
         }
       );
       await this.manageView.load();
+      if (filterType) {
+        this.manageView.setFilterType(filterType);
+      }
     }
   }
 
