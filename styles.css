@@ -264,7 +264,7 @@
 .trackly-star {
   cursor: pointer !important;
   font-size: 18px !important;
-  color: #666666 !important;
+  color: #e3ac17 !important;
   transition: all 0.15s ease !important;
 }
 
@@ -358,7 +358,6 @@
   color: #e0e0e0 !important;
   border: 1px solid #404040 !important;
   border-radius: 8px !important;
-  padding: 10px 14px !important;
   padding-right: 28px !important;
   font-size: 13px !important;
   cursor: pointer !important;
@@ -380,7 +379,7 @@
 
 .trackly-entry-row {
   display: grid;
-  grid-template-columns: 110px 1fr 80px 100px 70px 38px;
+  grid-template-columns: 110px 1fr 80px 100px 110px 38px;
   align-items: center;
   gap: 12px !important;
   padding: 14px 16px !important;
@@ -403,7 +402,7 @@
   color: #e0e0e0 !important;
   padding: 6px 10px !important;
   border-radius: 5px !important;
-  border: 1px solid transparent !important;
+  border: 1px solid #555555 !important;
   min-width: 0 !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
@@ -418,11 +417,11 @@
 
 .trackly-entry-progress {
   font-size: 13px !important;
-  color: #aaaacc !important;
+  color: #e0e0e0 !important;
   text-align: center !important;
   padding: 6px 8px !important;
   border-radius: 5px !important;
-  border: 1px solid transparent !important;
+  border: 1px solid #555555 !important;
   font-weight: 600 !important;
   font-variant-numeric: tabular-nums !important;
 }

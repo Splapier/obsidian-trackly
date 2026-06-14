@@ -170,7 +170,20 @@ export class ManageView extends Component {
         this.callbacks.onTypeChange(entry, newType);
       });
 
-      const nameCell = row.createEl('span');
+      const nameSection = row.createEl('div');
+      nameSection.style.display = 'flex';
+      nameSection.style.alignItems = 'center';
+      nameSection.style.gap = '8px';
+      nameSection.style.minWidth = '0';
+
+      const typeBadge = nameSection.createEl('span', {
+        text: MEDIA_TYPE_LABELS[entry.type],
+      });
+      typeBadge.addClass('trackly-type-badge');
+      typeBadge.style.background = typeColor;
+      typeBadge.addClass('trackly-entry-badge');
+
+      const nameCell = nameSection.createEl('span');
       nameCell.addClass('trackly-entry-name');
       nameCell.contentEditable = 'true';
       nameCell.textContent = entry.name;
