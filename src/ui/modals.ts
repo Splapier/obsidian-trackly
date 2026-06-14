@@ -84,18 +84,24 @@ export class AddEntryModal extends Modal {
         });
       });
 
-    new Setting(contentEl)
-      .setName('Rating')
-      .addDropdown((dropdown) => {
-        dropdown.addOption('0', 'Unrated');
-        for (let i = 1; i <= 5; i++) {
-          dropdown.addOption(String(i), `${'\u2605'.repeat(i)}${'\u2606'.repeat(5 - i)}`);
+    const ratingSetting = new Setting(contentEl)
+      .setName('Rating');
+    ratingSetting.infoEl.remove();
+    const ratingContainer = ratingSetting.settingEl.createEl('div');
+    ratingContainer.addClass('trackly-rating-stars');
+    for (let i = 1; i <= 5; i++) {
+      const star = ratingContainer.createEl('span');
+      star.addClass('trackly-star');
+      star.textContent = '\u2606';
+      star.addEventListener('click', () => {
+        this.rating = this.rating === i ? 0 : i;
+        for (let j = 1; j <= 5; j++) {
+          const s = ratingContainer.children[j - 1] as HTMLElement;
+          s.textContent = j <= this.rating ? '\u2605' : '\u2606';
+          s.style.color = j <= this.rating ? '#fbbf24' : '#e3ac17';
         }
-        dropdown.setValue('0');
-        dropdown.onChange((value) => {
-          this.rating = parseInt(value, 10) || 0;
-        });
       });
+    }
 
     const actions = contentEl.createEl('div');
     actions.addClass('trackly-modal-actions');
