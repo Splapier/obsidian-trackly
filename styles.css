@@ -117,7 +117,6 @@
 }
 
 .trackly-active-item {
-  background: #2a2a2a !important;
   border: 1px solid #404040 !important;
   border-left: 4px solid #888888 !important;
   border-radius: 10px !important;
@@ -290,7 +289,6 @@
 }
 
 .trackly-suggestion-card {
-  background: #2a2a2a !important;
   border: 1px solid #404040 !important;
   border-radius: 10px !important;
   padding: 20px !important;
@@ -383,7 +381,7 @@
   align-items: center;
   gap: 12px !important;
   padding: 14px 16px !important;
-  background: #2a2a2a !important;
+  background: #2a2a2a;
   border: 1px solid #404040 !important;
   border-left: 4px solid #888888 !important;
   border-radius: 8px !important;
@@ -400,6 +398,7 @@
   font-size: 14px !important;
   font-weight: 500 !important;
   color: #e0e0e0 !important;
+  background: #333333 !important;
   padding: 6px 10px !important;
   border-radius: 5px !important;
   border: 1px solid #555555 !important;
@@ -419,6 +418,7 @@
   font-size: 13px !important;
   color: #e0e0e0 !important;
   text-align: center !important;
+  background: #333333 !important;
   padding: 6px 8px !important;
   border-radius: 5px !important;
   border: 1px solid #555555 !important;
@@ -438,9 +438,9 @@
 }
 
 .trackly-entry-type {
-  background: #333333 !important;
+  background: #333333;
   color: #e0e0e0 !important;
-  border: 1px solid #555555 !important;
+  border: 1px solid #555555;
   border-radius: 6px !important;
   padding: 5px 6px !important;
   font-size: 12px !important;
@@ -449,6 +449,7 @@
 }
 
 .trackly-entry-type:focus {
+  background: #333333 !important;
   border-color: #dc143c !important;
   outline: none !important;
   box-shadow: 0 0 0 2px rgba(220, 20, 60, 0.2) !important;

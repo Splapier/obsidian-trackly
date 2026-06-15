@@ -84,6 +84,18 @@ export class TracklyTab extends ItemView {
             await this.storage.updateEntry({ ...entry, rating });
             await this.dashboardView?.load();
           },
+          onTypeChange: async (entry: MediaEntry, newType: MediaType) => {
+            await this.storage.deleteEntry(entry.id, entry.type);
+            await this.storage.addEntry({
+              name: entry.name,
+              type: newType,
+              status: entry.status,
+              progress: entry.progress,
+              total: entry.total,
+              rating: entry.rating,
+            });
+            await this.dashboardView?.load();
+          },
           onSuggestClick: async () => {
             await this.dashboardView?.load();
           },

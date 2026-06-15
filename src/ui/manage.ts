@@ -152,12 +152,11 @@ export class ManageView extends Component {
       const row = list.createEl('div');
       row.addClass('trackly-entry-row');
       row.style.borderLeftColor = typeColor;
+      row.style.background = `${typeColor}7f`;
       row.dataset.entryId = entry.id;
 
       const typeSelect = row.createEl('select');
       typeSelect.addClass('trackly-entry-type');
-      typeSelect.style.borderColor = typeColor;
-      typeSelect.style.background = `${typeColor}22`;
       for (const type of MEDIA_TYPES) {
         const opt = typeSelect.createEl('option', {
           text: MEDIA_TYPE_LABELS[type],
@@ -168,8 +167,8 @@ export class ManageView extends Component {
       typeSelect.addEventListener('change', (ev) => {
         const target = ev.target as HTMLSelectElement;
         const newType = target.value as MediaType;
-        typeSelect.style.borderColor = MEDIA_TYPE_COLORS[newType];
-        typeSelect.style.background = `${MEDIA_TYPE_COLORS[newType]}22`;
+        row.style.borderLeftColor = MEDIA_TYPE_COLORS[newType];
+        row.style.background = `${MEDIA_TYPE_COLORS[newType]}7f`;
         this.callbacks.onTypeChange(entry, newType);
       });
 
@@ -178,9 +177,12 @@ export class ManageView extends Component {
       nameSection.style.alignItems = 'center';
       nameSection.style.gap = '8px';
       nameSection.style.minWidth = '0';
+      nameSection.style.flex = '1 1 0';
 
       const nameCell = nameSection.createEl('span');
       nameCell.addClass('trackly-entry-name');
+      nameCell.style.flex = '1 1 0';
+      nameCell.style.minWidth = '0';
       nameCell.contentEditable = 'true';
       nameCell.textContent = entry.name;
       nameCell.addEventListener('blur', () => {

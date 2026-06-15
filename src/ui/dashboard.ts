@@ -7,6 +7,7 @@ interface DashboardCallbacks {
   onIncrement: (entry: MediaEntry, amount: number) => void;
   onStatusChange: (entry: MediaEntry, status: Status) => void;
   onRatingChange: (entry: MediaEntry, rating: number) => void;
+  onTypeChange: (entry: MediaEntry, newType: MediaType) => void;
   onSuggestClick: () => void;
   onStartSuggestion: (entry: MediaEntry) => void;
   onFilterClick: (type: MediaType) => void;
@@ -120,13 +121,27 @@ export class DashboardView extends Component {
       const item = list.createEl('div');
       item.addClass('trackly-active-item');
       item.style.borderLeftColor = typeColor;
+      item.style.background = `${typeColor}7f`;
+
+      const typeSelect = item.createEl('select');
+      typeSelect.addClass('trackly-entry-type');
+      for (const type of MEDIA_TYPES) {
+        const opt = typeSelect.createEl('option', {
+          text: MEDIA_TYPE_LABELS[type],
+          value: type,
+        });
+        if (type === entry.type) opt.selected = true;
+      }
+      typeSelect.addEventListener('change', (ev) => {
+        const target = ev.target as HTMLSelectElement;
+        const newType = target.value as MediaType;
+        item.style.borderLeftColor = MEDIA_TYPE_COLORS[newType];
+        item.style.background = `${MEDIA_TYPE_COLORS[newType]}7f`;
+        this.callbacks.onTypeChange(entry, newType);
+      });
 
       const infoSection = item.createEl('div');
       infoSection.addClass('trackly-active-info');
-
-      const typeBadge = infoSection.createEl('span', { text: MEDIA_TYPE_LABELS[entry.type] });
-      typeBadge.addClass('trackly-type-badge');
-      typeBadge.style.background = typeColor;
 
       const nameEl = infoSection.createEl('span', { text: entry.name });
       nameEl.addClass('trackly-active-name');
@@ -222,11 +237,25 @@ export class DashboardView extends Component {
       const suggested = this.suggestedEntry;
       const typeColor = MEDIA_TYPE_COLORS[suggested.type];
 
-      const typeLabel = suggestionContainer.createEl('span', {
-        text: MEDIA_TYPE_LABELS[suggested.type],
+      suggestionContainer.style.borderLeftColor = typeColor;
+      suggestionContainer.style.background = `${typeColor}7f`;
+
+      const typeSelect = suggestionContainer.createEl('select');
+      typeSelect.addClass('trackly-entry-type');
+      for (const type of MEDIA_TYPES) {
+        const opt = typeSelect.createEl('option', {
+          text: MEDIA_TYPE_LABELS[type],
+          value: type,
+        });
+        if (type === suggested.type) opt.selected = true;
+      }
+      typeSelect.addEventListener('change', (ev) => {
+        const target = ev.target as HTMLSelectElement;
+        const newType = target.value as MediaType;
+        suggestionContainer.style.borderLeftColor = MEDIA_TYPE_COLORS[newType];
+        suggestionContainer.style.background = `${MEDIA_TYPE_COLORS[newType]}7f`;
+        this.callbacks.onTypeChange(suggested, newType);
       });
-      typeLabel.addClass('trackly-type-badge');
-      typeLabel.style.background = typeColor;
 
       const nameEl = suggestionContainer.createEl('span', {
         text: suggested.name,
