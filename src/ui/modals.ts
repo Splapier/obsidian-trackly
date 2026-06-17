@@ -9,6 +9,7 @@ interface AddEntryModalCallbacks {
 export class AddEntryModal extends Modal {
   private callbacks: AddEntryModalCallbacks;
   private childComponent: Component;
+  private existingEntries: MediaEntry[];
 
   private selectedType: MediaType = 'games';
   private name: string = '';
@@ -19,9 +20,10 @@ export class AddEntryModal extends Modal {
   private totalInput: HTMLInputElement | null = null;
   private progressSettingEl: HTMLElement | null = null;
 
-  constructor(app: App, callbacks: AddEntryModalCallbacks) {
+  constructor(app: App, callbacks: AddEntryModalCallbacks, existingEntries: MediaEntry[]) {
     super(app);
     this.callbacks = callbacks;
+    this.existingEntries = existingEntries;
     this.childComponent = new Component();
   }
 
@@ -117,6 +119,14 @@ export class AddEntryModal extends Modal {
     addBtn.addEventListener('click', () => {
       if (!this.name.trim()) {
         new Notice('Please enter a name for the entry.');
+        return;
+      }
+
+      const existing = this.existingEntries.find(
+        (e) => e.type === this.selectedType && e.name.toLowerCase() === this.name.trim().toLowerCase(),
+      );
+      if (existing) {
+        new Notice(`"${this.name.trim()}" already exists in ${MEDIA_TYPE_LABELS[this.selectedType]}.`);
         return;
       }
       let progress = 0;

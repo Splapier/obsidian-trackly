@@ -137,13 +137,14 @@ export class TracklyTab extends ItemView {
             });
             await this.manageView?.load();
           },
-          onAddClick: () => {
+          onAddClick: async () => {
+            const existingEntries = await this.storage.getAllEntries();
             const modal = new AddEntryModal(this.app, {
               onAdd: async (entryData) => {
                 await this.storage.addEntry(entryData);
                 await this.manageView?.load();
               },
-            });
+            }, existingEntries);
             modal.open();
           },
         }

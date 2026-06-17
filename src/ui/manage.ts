@@ -18,9 +18,11 @@ export class ManageView extends Component {
   private allEntries: MediaEntry[] = [];
   private searchTerm: string = '';
   private filterType: MediaType | 'all' = 'all';
+  private filterStatus: Status | 'all' = 'all';
 
   private searchInput: HTMLInputElement | null = null;
   private filterSelect: HTMLSelectElement | null = null;
+  private statusFilterSelect: HTMLSelectElement | null = null;
 
   constructor(container: HTMLElement, storage: StorageManager, callbacks: ManageCallbacks) {
     super();
@@ -50,10 +52,20 @@ export class ManageView extends Component {
       entries = entries.filter((e) => e.type === this.filterType);
     }
 
+    if (this.filterStatus !== 'all') {
+      entries = entries.filter((e) => e.status === this.filterStatus);
+    }
+
     if (this.searchTerm.trim()) {
       const term = this.searchTerm.toLowerCase();
       entries = entries.filter((e) => e.name.toLowerCase().includes(term));
     }
+
+    entries.sort((a, b) => {
+      const typeDiff = MEDIA_TYPES.indexOf(a.type) - MEDIA_TYPES.indexOf(b.type);
+      if (typeDiff !== 0) return typeDiff;
+      return a.name.localeCompare(b.name);
+    });
 
     return entries;
   }
@@ -116,6 +128,26 @@ export class ManageView extends Component {
     filterSelect.addEventListener('change', (ev) => {
       const target = ev.target as HTMLSelectElement;
       this.filterType = target.value as MediaType | 'all';
+      this.renderEntryList();
+    });
+
+    const statusFilterSelect = toolbar.createEl('select');
+    statusFilterSelect.addClass('trackly-filter-select');
+    this.statusFilterSelect = statusFilterSelect;
+
+    const allStatusOpt = statusFilterSelect.createEl('option', { text: 'All Statuses', value: 'all' });
+    allStatusOpt.selected = this.filterStatus === 'all';
+
+    for (const status of STATUS_OPTIONS) {
+      const opt = statusFilterSelect.createEl('option', {
+        text: status,
+        value: status,
+      });
+      opt.selected = this.filterStatus === status;
+    }
+    statusFilterSelect.addEventListener('change', (ev) => {
+      const target = ev.target as HTMLSelectElement;
+      this.filterStatus = target.value as Status | 'all';
       this.renderEntryList();
     });
 
