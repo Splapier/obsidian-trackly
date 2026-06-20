@@ -59,3 +59,10 @@ export const MEDIA_TYPE_COLORS: Record<MediaType, string> = {
 export function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 }
+
+export function titleCase(name: string): string {
+  return name.split(/\s+/).map((word) => {
+    if (!word.length) return word;
+    return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+  }).join(' ');
+}

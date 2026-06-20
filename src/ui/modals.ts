@@ -1,6 +1,6 @@
 import { Modal, App, Setting, Notice, Component } from 'obsidian';
 import type { MediaEntry, MediaType, Status } from '../types';
-import { MEDIA_TYPES, STATUS_OPTIONS, MEDIA_TYPE_LABELS, HAS_PROGRESS } from '../types';
+import { MEDIA_TYPES, STATUS_OPTIONS, MEDIA_TYPE_LABELS, HAS_PROGRESS, titleCase } from '../types';
 
 interface AddEntryModalCallbacks {
   onAdd: (entry: Omit<MediaEntry, 'id'>) => void;
@@ -134,7 +134,7 @@ export class AddEntryModal extends Modal {
         progress = this.total;
       }
       this.callbacks.onAdd({
-        name: this.name.trim(),
+        name: titleCase(this.name.trim()),
         type: this.selectedType,
         status: this.status,
         progress,
