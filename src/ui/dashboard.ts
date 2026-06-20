@@ -179,7 +179,12 @@ export class DashboardView extends Component {
         incrementBtn.addClass('trackly-btn-small');
         incrementBtn.style.borderColor = typeColor;
         incrementBtn.addEventListener('click', () => {
-          const updated = { ...entry, progress: Math.min(entry.total, entry.progress + 1) };
+          const newProgress = entry.progress + 1;
+          let newTotal = entry.total;
+          if (entry.progress >= entry.total) {
+            newTotal = entry.total + 1;
+          }
+          const updated = { ...entry, progress: newProgress, total: newTotal };
           this.callbacks.onIncrement(updated, 1);
         });
       }

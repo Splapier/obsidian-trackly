@@ -38,7 +38,7 @@ export const MEDIA_TYPE_FILE_NAMES: Record<MediaType, string> = {
 
 export const HAS_PROGRESS: Record<MediaType, boolean> = {
   games: false,
-  books: false,
+  books: true,
   webNovels: true,
   manga: true,
   anime: true,
